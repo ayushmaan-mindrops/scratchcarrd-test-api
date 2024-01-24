@@ -90,7 +90,8 @@ const upload = require("../middlewares/upload.middleware");
  *                   description: Error message.
  */
 router.get("/", productController.getProducts);
-router.post("/", upload.single("img"), productController.createProduct);
+router.post("/", productController.createProduct);
+// router.post("/", upload.single("img"), productController.createProduct);
 
 /**
  * @swagger

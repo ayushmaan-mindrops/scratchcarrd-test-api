@@ -1,17 +1,32 @@
-const Product = require("../models/Product.model");
+const Product = require("../models/Product.model"); // Make sure to adjust the import based on your project structure
 
 exports.createProduct = async (req, res) => {
   try {
-    const { name, productValue } = req.body;
-    if (!productValue || !name) {
-      return res.status(400).json({ error: "All fields are required" });
-    }
-    const img = req.file ? req.file.path : null;
-    console.log(req.file, name, img);
+    const products = req.body.products;
+    const productsWithoutIds = products.map(
+      ({ id, createdAt, updatedAt, ...rest }) => rest
+    );
 
-    let prodObj = { name, productValue, img };
-    const product = await Product.create(prodObj);
-    res.status(201).json({ message: "Product Created", product });
+    if (!Array.isArray(products) || products.length === 0) {
+      return res.status(400).json({ error: "Invalid data format" });
+    }
+
+    // Validate each product data
+    for (const product of productsWithoutIds) {
+      const { name, productValue, img } = product;
+      if (!productValue || !name || !img) {
+        return res
+          .status(400)
+          .json({ error: "All fields are required for each product" });
+      }
+    }
+
+    // console.log(products);
+    const createdProducts = await Product.bulkCreate(productsWithoutIds);
+
+    res
+      .status(201)
+      .json({ message: "Products Created", products: createdProducts });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
