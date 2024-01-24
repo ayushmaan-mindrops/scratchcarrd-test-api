@@ -1,0 +1,21 @@
+{
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "name": {
+      "type": "string"
+    },
+    "img": {
+      "type": "string"
+    },
+    "productValue": {
+      "type": "integer",
+      "minimum": 1
+    }
+  },
+  "required": ["name", "img", "productValue"],
+  "additionalProperties": false
+}

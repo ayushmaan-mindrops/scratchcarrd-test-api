@@ -1,0 +1,48 @@
+{
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "traderName": {
+      "type": "string"
+    },
+    "traderCode": {
+      "type": "string"
+    },
+    "contactPersonName": {
+      "type": "string"
+    },
+    "email": {
+      "type": "string"
+    },
+    "mobile": {
+      "type": "string"
+    },
+    "address": {
+      "type": "string"
+    },
+    "state": {
+      "type": "string"
+    },
+    "pincode": {
+      "type": "integer"
+    },
+    "numberOfSheets": {
+      "type": "integer"
+    }
+  },
+  "required": [
+    "traderName",
+    "traderCode",
+    "contactPersonName",
+    "email",
+    "mobile",
+    "address",
+    "state",
+    "pincode",
+    "numberOfSheets"
+  ],
+  "additionalProperties": false
+}
