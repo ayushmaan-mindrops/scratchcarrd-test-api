@@ -175,7 +175,18 @@ exports.createTrader = async (req, res) => {
 };
 
 exports.updateTrader = async (req, res) => {
-  res.json({ message: "Trader Updated!" });
+  try {
+    const traderId = req.params.id;
+    const [updatedRows] = await Trader.update(req.body, {
+      where: { id: traderId },
+    });
+    if (updatedRows === 0) {
+      return res.status(404).json({ message: "Trader not found" });
+    }
+    res.status(200).json({ message: "Trader updated" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 };
 
 exports.deleteTraders = async (req, res) => {

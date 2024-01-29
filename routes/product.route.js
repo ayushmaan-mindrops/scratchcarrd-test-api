@@ -9,6 +9,9 @@ const router = express.Router();
 
 const productController = require("../controllers/product.controller");
 const upload = require("../middlewares/upload.middleware");
+const auth = require("../middlewares/auth.middleware");
+
+router.use(auth);
 
 /**
  * @swagger
@@ -90,8 +93,7 @@ const upload = require("../middlewares/upload.middleware");
  *                   description: Error message.
  */
 router.get("/", productController.getProducts);
-router.post("/", productController.createProduct);
-// router.post("/", upload.single("img"), productController.createProduct);
+router.post("/", upload.single("img"), productController.createProduct);
 
 /**
  * @swagger
@@ -187,7 +189,7 @@ router.post("/", productController.createProduct);
  *                   type: string
  *                   description: Error message.
  */
-router.patch("/:id", productController.updateProduct);
+router.patch("/:id", upload.single("img"), productController.updateProduct);
 router.delete("/:id", productController.deleteProduct);
 
 module.exports = router;

@@ -13,6 +13,7 @@ const swaggerSpec = require("./swagger/swagger");
 const traderRoutes = require("./routes/trader.route");
 const productRoutes = require("./routes/product.route");
 const scratchCardRoutes = require("./routes/scratchcard.route");
+const authRoutes = require("./routes/auth.route");
 
 const PORT = process.env.PORT || 3000;
 
@@ -41,6 +42,7 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use("/trader", traderRoutes);
 app.use("/product", productRoutes);
 app.use("/scratchcard", scratchCardRoutes);
+app.use("/", authRoutes);
 app.listen(PORT, async () => {
   try {
     await sequelize.authenticate();

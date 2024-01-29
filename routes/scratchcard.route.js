@@ -8,6 +8,9 @@ const express = require("express");
 const router = express.Router();
 
 const scratchCardController = require("../controllers/scratchcard.controller");
+const auth = require("../middlewares/auth.middleware");
+
+router.use(auth);
 
 /**
  * @swagger
