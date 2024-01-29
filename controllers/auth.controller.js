@@ -128,7 +128,7 @@ exports.login = async (req, res) => {
 //         </td>
 //       </tr>
 //     </table>
-  
+
 //   </body>
 // </html>`;
 
@@ -161,22 +161,43 @@ exports.email = async (req, res) => {
     </head>
     <body style="font-family: Arial, sans-serif; text-align: center;  margin: 0; padding: 0;">
     
-        <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" max-width="680px" style="margin: 0px auto; border: 1px solid #ffffff; border-radius: 5px; background-image: url(https://woodcrrests.netlify.app/assets/imgs/background_3.jpg);">
-          <tr>
-            <td style="padding: 20px;">
+        <div  align="center" style="margin: 0px auto;padding:40px 20px; border: 1px solid #ffffff; border-radius: 5px; background-image: url(https://woodcrrests.netlify.app/assets/imgs/background_3.jpg);">
               <img src="https://woodcrrests.netlify.app/assets/imgs/woodcrrests_logo_3.png" alt="Your Logo" style="display: block; margin: 0 auto;">
               <h2 style="margin-top: 10px; color: #000000;">${trader.traderName}</h2>
               <h2 style="color: #000000; text-transform: uppercase;">Thank you for participating In!</h2>
-              <img src="https://woodcrrests.netlify.app/assets/imgs/gift-box-image.png" alt="Gift Wrapper" style="display: block; margin: 20px auto;">
+              <img src="https://woodcrrests.netlify.app/assets/imgs/gift-box-image.png" alt="Gift Wrapper" style="width:30%; display: block; margin: 20px auto;">
               <h2 style="color: #000000;">Congratulations!</h2>
               <h3 style="color: #000000; text-transform: uppercase;">You have won ${trader.ScratchCards.length} scratch cards.</h3>
               <a href="#" style="display: inline-block; padding: 10px 20px; color: #ffffff; text-decoration: none; border-radius: 18px; background-color: #E12F29;">Redeem Now</a>
-            </td>
-          </tr>
-        </table>
+        </div>
       
       </body>
     </html>`;
+    // const html = `<!DOCTYPE html>
+    // <html lang="en">
+    // <head>
+    //     <meta charset="UTF-8">
+    //     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    //     <title>Woodcrrests | Email</title>
+    // </head>
+    // <body style="font-family: Arial, sans-serif; text-align: center;  margin: 0; padding: 0;">
+    
+    //     <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="margin: 0px auto; border: 1px solid #ffffff; border-radius: 5px; background-image: url(https://woodcrrests.netlify.app/assets/imgs/background_3.jpg);">
+    //       <tr>
+    //         <td style="padding: 20px;">
+    //           <img src="https://woodcrrests.netlify.app/assets/imgs/woodcrrests_logo_3.png" alt="Your Logo" style="width:100%; display: block; margin: 0 auto;">
+    //           <h2 style="margin-top: 10px; color: #000000;">${trader.traderName}</h2>
+    //           <h2 style="color: #000000; text-transform: uppercase;">Thank you for participating In!</h2>
+    //           <img src="https://woodcrrests.netlify.app/assets/imgs/gift-box-image.png" alt="Gift Wrapper" style="display: block; margin: 20px auto;">
+    //           <h2 style="color: #000000;">Congratulations!</h2>
+    //           <h3 style="color: #000000; text-transform: uppercase;">You have won ${trader.ScratchCards.length} scratch cards.</h3>
+    //           <a href="#" style="display: inline-block; padding: 10px 20px; color: #ffffff; text-decoration: none; border-radius: 18px; background-color: #E12F29;">Redeem Now</a>
+    //         </td>
+    //       </tr>
+    //     </table>
+      
+    //   </body>
+    // </html>`;
     const transporter = nodeMailer.createTransport({
       host: "smtp.gmail.com",
       port: 465,
