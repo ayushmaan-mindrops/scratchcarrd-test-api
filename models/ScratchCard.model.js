@@ -17,11 +17,16 @@ const ScratchCard = sequelize.define("ScratchCard", {
       isIn: [["pending", "redeemed"]],
     },
   },
+  isMega: {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: false,
+  },
 });
 
 Trader.hasMany(ScratchCard, { onDelete: "CASCADE" });
 ScratchCard.belongsTo(Trader);
-Product.hasMany(ScratchCard,{ onDelete: "CASCADE" });
+Product.hasMany(ScratchCard, { onDelete: "CASCADE" });
 ScratchCard.belongsTo(Product);
 
 module.exports = ScratchCard;

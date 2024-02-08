@@ -5,15 +5,12 @@ const { Op } = require("sequelize");
 const jwt = require("jsonwebtoken");
 const nodeMailer = require("nodemailer");
 const ScratchCard = require("../models/ScratchCard.model");
-const fs = require("fs");
-const path = require("path");
-
 require("dotenv").config();
 
 exports.createUser = async (req, res) => {
   try {
     let { username, password, email } = req.body;
-    const img = req.file ? req.file.path : "/images/defaultProfile.png";
+    const img = req.file ? req.file.path : "images/defaultProfile.png";
 
     if (!username || !password || !email) {
       return res.status(400).json({ error: "All fields are required" });
@@ -97,6 +94,7 @@ exports.login = async (req, res) => {
         res.status(200).json({
           message: "Login Successfull",
           token,
+          user,
         });
       }
     );
@@ -106,98 +104,183 @@ exports.login = async (req, res) => {
   }
 };
 
-// const template = `<!DOCTYPE html>
-// <html lang="en">
-// <head>
-//     <meta charset="UTF-8">
-//     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-//     <title>Woodcrrests | Email</title>
-// </head>
-// <body style="font-family: Arial, sans-serif; text-align: center;  margin: 0; padding: 0;">
+exports.validateTrader = async (req, res) => {
+  try {
+    let traderId = req.params.id;
 
-//     <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" max-width="680px" style="margin: 0px auto; border: 1px solid #ffffff; border-radius: 5px; background-image: url(https://woodcrrests.netlify.app/assets/imgs/background_3.jpg);">
-//       <tr>
-//         <td style="padding: 20px;">
-//           <img src="https://woodcrrests.netlify.app/assets/imgs/woodcrrests_logo_3.png" alt="Your Logo" style="display: block; margin: 0 auto;">
-//           <h2 style="margin-top: 10px; color: #000000;">M/S: K.R.G & CO</h2>
-//           <h2 style="color: #000000; text-transform: uppercase;">Thank you for participating In!</h2>
-//           <img src="https://woodcrrests.netlify.app/assets/imgs/gift-box-image.png" alt="Gift Wrapper" style="display: block; margin: 20px auto;">
-//           <h2 style="color: #000000;">Congratulations!</h2>
-//           <h3 style="color: #000000; text-transform: uppercase;">You have won 3 scratch cards.</h3>
-//           <a href="#" style="display: inline-block; padding: 10px 20px; color: #ffffff; text-decoration: none; border-radius: 18px; background-color: #E12F29;">Redeem Now</a>
-//         </td>
-//       </tr>
-//     </table>
+    if (!traderId) {
+      return res.status(400).json({ error: "All fields are required" });
+    }
+    const trader = await Trader.findByPk(traderId);
+    if (!trader) {
+      return res.status(400).json({ error: "Invalid Trader Id" });
+    }
 
-//   </body>
-// </html>`;
+    jwt.sign(
+      {
+        traderId,
+      },
+      process.env.JWT_SECRET_KEY,
+      function (err, token) {
+        console.log(token);
+        if (err) {
+          return res.status(500).json({ error: err.message });
+        }
 
+        res.status(200).json({
+          message: "Valid Trader",
+          token,
+          trader,
+        });
+      }
+    );
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: error.message });
+  }
+};
 exports.email = async (req, res) => {
   try {
     let traderId = req.body.id;
+    let isMegaEmail = req.query.isMegaEmail;
     let trader = await Trader.findOne({
       where: {
         id: traderId,
       },
-      include: [ScratchCard],
+      include: [
+        {
+          model: ScratchCard,
+          where: {
+            isMega: false,
+            status: "pending",
+          },
+        },
+      ],
     });
 
-    if (!trader) {
-      return res.status(400).json({ error: "Trader not found" });
-    }
-
-    if (trader.ScratchCards.length == 0) {
+    if (!trader || trader.ScratchCards.length === 0) {
       return res
         .status(400)
         .json({ error: "No Scratchcards are assigned to this Trader" });
     }
 
-    const html = `<!DOCTYPE html>
-    <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Woodcrrests | Email</title>
-    </head>
-    <body style="font-family: Arial, sans-serif; text-align: center;  margin: 0; padding: 0;">
-    
-        <div  align="center" style="margin: 0px auto;padding:40px 20px; border: 1px solid #ffffff; border-radius: 5px; background-image: url(https://woodcrrests.netlify.app/assets/imgs/background_3.jpg);">
-              <img src="https://woodcrrests.netlify.app/assets/imgs/woodcrrests_logo_3.png" alt="Your Logo" style="display: block; margin: 0 auto;">
-              <h2 style="margin-top: 10px; color: #000000;">${trader.traderName}</h2>
-              <h2 style="color: #000000; text-transform: uppercase;">Thank you for participating In!</h2>
-              <img src="https://woodcrrests.netlify.app/assets/imgs/gift-box-image.png" alt="Gift Wrapper" style="width:30%; display: block; margin: 20px auto;">
-              <h2 style="color: #000000;">Congratulations!</h2>
-              <h3 style="color: #000000; text-transform: uppercase;">You have won ${trader.ScratchCards.length} scratch cards.</h3>
-              <a href="#" style="display: inline-block; padding: 10px 20px; color: #ffffff; text-decoration: none; border-radius: 18px; background-color: #E12F29;">Redeem Now</a>
-        </div>
+    let html;
+    if (!isMegaEmail) {
+      html = `
+      <!DOCTYPE html>
+      <html lang="en">
+        <head>
+          <meta charset="UTF-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+          <title>Woodcrrests | Email</title>
+        </head>
+        <style>
+        @font-face {
+          font-family: 'Rhino6';
+          src: url(data:application/font-ttf;base64
+        }
+        
+        @font-face {
+          font-family: 'Montserrat-SemiBold';
+          src: url(data:application/font-otf;base64, [BASE64_ENCODED_DATA]) format('opentype');
+        }
+        
+        </style>
+        <body
+          style="
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+          "
+        >
+          <table
+            role="presentation"
+            cellspacing="0"
+            cellpadding="0"
+            border="0"
+            align="center"
+            style="
+              width: 100%;
+              max-width: 1280px;
+              overflow: hidden;
+              height: min-content;
+              margin-inline: auto;
+              border: 1px solid #000000;
+              background-image: url(https://woodcrrests.netlify.app/assets/imgs/background_3.jpg);
+            "
+          >
+            <tr>
+              <td style="padding: 10px">
+                <img
+                  src="https://woodcrrests-new.netlify.app/assets/imgs/woodcrrests_logo_3.png"
+                  style="
+                    display: block;
+                    margin: 0 auto;
+                    width: 100px;
+                    max-width: 100%;
+                  "
+                />
+                <h2
+                  style="
+                    margin-block: 5px;
+                    color: #000000;
+                    font-family: 'Montserrat-SemiBold', 'Montserrat', sans-serif;
+                  "
+                >
+                  ${trader.traderName} <br />
+                  Thank you for participating In!
+                </h2>
+                <img
+                  src="https://woodcrrests-new.netlify.app/assets/imgs/gift-box-image.png"
+                  alt="Gift Wrapper"
+                  style="display: block; margin: 5px auto; width: min(250px, 100%)"
+                  class="banner"
+                />
+                <h2
+                  style="
+                    margin-block: 10px;
+                    color: #000000;
+                    font-family: 'Rhino6', sans-serif;
+                  "
+                >
+                  Congratulations!
+                </h2>
+                <h3
+                  style="
+                    margin-block: 5px;
+                    color: #000000;
+                    text-transform: uppercase;
+                    font-family: 'Montserrat-SemiBold', 'Montserrat', sans-serif;
+                  "
+                >
+                  You have won ${trader.ScratchCards.length} scratch cards.
+                </h3>
+                <a
+                  href="https://heydayrewards.com/trader/${traderId}>"
+                  style="
+                    display: inline-block;
+                    padding: 10px 20px;
+                    color: #ffffff;
+                    text-decoration: none;
+                    border-radius: 10px;
+                    background-color: #e12f29;
+                    font-family: 'Montserrat-SemiBold', 'Montserrat', sans-serif;
+                  "
+                >
+                  Redeem Now
+                </a>
+              </td>
+            </tr>
+          </table>
+        </body>
+      </html>
       
-      </body>
-    </html>`;
-    // const html = `<!DOCTYPE html>
-    // <html lang="en">
-    // <head>
-    //     <meta charset="UTF-8">
-    //     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    //     <title>Woodcrrests | Email</title>
-    // </head>
-    // <body style="font-family: Arial, sans-serif; text-align: center;  margin: 0; padding: 0;">
-    
-    //     <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="margin: 0px auto; border: 1px solid #ffffff; border-radius: 5px; background-image: url(https://woodcrrests.netlify.app/assets/imgs/background_3.jpg);">
-    //       <tr>
-    //         <td style="padding: 20px;">
-    //           <img src="https://woodcrrests.netlify.app/assets/imgs/woodcrrests_logo_3.png" alt="Your Logo" style="width:100%; display: block; margin: 0 auto;">
-    //           <h2 style="margin-top: 10px; color: #000000;">${trader.traderName}</h2>
-    //           <h2 style="color: #000000; text-transform: uppercase;">Thank you for participating In!</h2>
-    //           <img src="https://woodcrrests.netlify.app/assets/imgs/gift-box-image.png" alt="Gift Wrapper" style="display: block; margin: 20px auto;">
-    //           <h2 style="color: #000000;">Congratulations!</h2>
-    //           <h3 style="color: #000000; text-transform: uppercase;">You have won ${trader.ScratchCards.length} scratch cards.</h3>
-    //           <a href="#" style="display: inline-block; padding: 10px 20px; color: #ffffff; text-decoration: none; border-radius: 18px; background-color: #E12F29;">Redeem Now</a>
-    //         </td>
-    //       </tr>
-    //     </table>
-      
-    //   </body>
-    // </html>`;
+      `;
+    } else {
+      // send mega scratchcard/jackpot email
+    }
+
     const transporter = nodeMailer.createTransport({
       host: "smtp.gmail.com",
       port: 465,
@@ -210,8 +293,7 @@ exports.email = async (req, res) => {
 
     const info = await transporter.sendMail({
       from: "ujjwalsaxena774@gmail.com",
-      // to: "ujjwalsaxena774@yahoo.com",
-      to: trader.email,
+      to: "ujjwal.saxena@mindrops.com",
       subject: "Congrats! You have won some rewards!",
       html,
     });
@@ -223,5 +305,6 @@ exports.email = async (req, res) => {
     });
   } catch (error) {
     console.log(error);
+    return res.status(500).json({ error: error.message });
   }
 };

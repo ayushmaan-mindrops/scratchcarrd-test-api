@@ -190,6 +190,9 @@ router.post("/", upload.single("img"), productController.createProduct);
  *                   description: Error message.
  */
 router.patch("/:id", upload.single("img"), productController.updateProduct);
+
 router.delete("/:id", productController.deleteProduct);
+
+router.get("/mega", productController.getMegaProducts);
 
 module.exports = router;

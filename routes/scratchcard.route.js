@@ -143,7 +143,7 @@ router.post("/", scratchCardController.createScratchCard);
  *                   type: string
  *                   description: Error message.
  */
-router.get("/", scratchCardController.getScratchCards);
+// router.get("/", scratchCardController.getScratchCards);
 
 /**
  * @swagger
@@ -310,6 +310,8 @@ router.delete("/:id", scratchCardController.deleteScratchCard);
  *                   description: Error message.
  */
 router.get("/:id", scratchCardController.getScratchCard);
+
+router.get("/mega/:id", scratchCardController.getMegaScratchCards);
 
 /**
  * @swagger

@@ -17,8 +17,12 @@ const Product = sequelize.define("Product", {
     allowNull: true,
     defaultValue: "/images/default.jpg",
   },
+  isMega: {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: false,
+  },
   productValue: {
-    //Just Incase the product value changes in future
     type: DataTypes.INTEGER,
     allowNull: false,
     validate: {

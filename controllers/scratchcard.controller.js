@@ -13,11 +13,28 @@ exports.createScratchCard = async (req, res) => {
         .json({ error: "Trader ID && Product ID is required." });
     }
 
-    const trader = await Trader.findByPk(traderId);
+    const trader = await Trader.findByPk(traderId, {
+      include: [ScratchCard],
+    });
     const product = await Product.findByPk(productId);
 
     if (!trader || !product) {
       return res.status(404).json({ error: "Trader or Product not found." });
+    }
+    console.log(trader.ScratchCards);
+    if (trader.ScratchCards.length > 0 && product.isMega) {
+      let scartchcard;
+      trader.ScratchCards.forEach((card) => {
+        if (card.isMega && card.status === "pending") {
+          scartchcard = card;
+          return;
+        }
+      });
+      if (scartchcard)
+        return res.status(400).json({
+          error: "This Trader already has a mega scratchcard",
+          scratchcard: scartchcard,
+        });
     }
 
     const existingScratchCard = await ScratchCard.findOne({
@@ -29,17 +46,28 @@ exports.createScratchCard = async (req, res) => {
     });
 
     if (existingScratchCard) {
-      return res.status(200).json({
-        message: "Scratchcard already exists",
+      return res.status(400).json({
+        error: "Scratchcard already exists",
         scratchcard: existingScratchCard,
       });
     }
 
-    const newScratchCard = await ScratchCard.create({
-      status: "pending",
-      TraderId: traderId,
-      ProductId: productId,
-    });
+    let newScratchCard;
+    if (product.isMega) {
+      newScratchCard = await ScratchCard.create({
+        status: "pending",
+        TraderId: traderId,
+        ProductId: productId,
+        isMega: true,
+      });
+    } else {
+      newScratchCard = await ScratchCard.create({
+        status: "pending",
+        TraderId: traderId,
+        ProductId: productId,
+        isMega: false,
+      });
+    }
 
     return res.status(201).json({
       message: "New Scratchcard created",
@@ -95,60 +123,94 @@ exports.deleteScratchCard = async (req, res) => {
   }
 };
 
-exports.getScratchCards = async (req, res) => {
-  try {
-    const { productId, traderId, page = 1, limit = 10 } = req.query;
-    let whereClause = {};
+// exports.getScratchCards = async (req, res) => {
+//   try {
+//     const { productId, traderId, page = 1, limit = 10 } = req.query;
+//     let whereClause = {};
 
-    if (productId) {
-      whereClause.ProductId = productId;
-    }
+//     if (productId) {
+//       whereClause.ProductId = productId;
+//     }
 
-    if (traderId) {
-      whereClause.TraderId = traderId;
-    }
+//     if (traderId) {
+//       whereClause.TraderId = traderId;
+//     }
 
-    const options = {
-      where: whereClause,
-      offset: (page - 1) * limit,
-      limit: parseInt(limit),
-      include: [Product],
-    };
+//     const options = {
+//       where: whereClause,
+//       offset: (page - 1) * limit,
+//       limit: parseInt(limit),
+//       include: [Product],
+//     };
 
-    const { count, rows: scratchcards } = await ScratchCard.findAndCountAll(
-      options
-    );
+//     const { count, rows: scratchcards } = await ScratchCard.findAndCountAll(
+//       options
+//     );
 
-    return res.status(200).json({
-      message: "ScratchCards found!",
-      totalItems: count,
-      totalPages: Math.ceil(count / parseInt(limit)),
-      currentPage: parseInt(page),
-      scratchcards,
-    });
-  } catch (error) {
-    console.error("Error fetching ScratchCards:", error);
-    return res.status(500).json({ error: error.message });
-  }
-};
+//     return res.status(200).json({
+//       message: "ScratchCards found!",
+//       totalItems: count,
+//       totalPages: Math.ceil(count / parseInt(limit)),
+//       currentPage: parseInt(page),
+//       scratchcards,
+//     });
+//   } catch (error) {
+//     console.error("Error fetching ScratchCards:", error);
+//     return res.status(500).json({ error: error.message });
+//   }
+// };
 // Returning scratchcards of a specific trader to be displayed
 exports.getScratchCard = async (req, res) => {
   try {
     const { id } = req.params;
     const trader = await Trader.findByPk(id);
-    if (!trader) {
+    console.log(id, req.params);
+    if (!trader || !id) {
       return res.status(404).json({ error: "Invalid URL" });
     }
     let { count, rows: scratchcards } = await ScratchCard.findAndCountAll({
       where: {
         TraderId: id,
         status: "pending",
+        isMega: false,
       },
       include: [Product],
     });
     if (scratchcards.length == 0) {
       return res.status(404).json({
         error: `${trader.traderName} currently has no Scratchcard assigned to them.`,
+      });
+    }
+    return res.status(200).json({
+      message: `ScratchCards for ${trader.traderName} Found!`,
+      totalItems: count,
+      scratchcards,
+    });
+  } catch (error) {
+    console.error("Error fetching ScratchCard:", error);
+    return res.status(500).json({ error: error.message });
+  }
+};
+
+exports.getMegaScratchCards = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const trader = await Trader.findByPk(id);
+    console.log(id);
+    if (!trader || !id) {
+      return res.status(404).json({ error: "Invalid URL" });
+    }
+    let { count, rows: scratchcards } = await ScratchCard.findAndCountAll({
+      where: {
+        TraderId: id,
+        status: "pending",
+        isMega: true,
+      },
+      include: [Product],
+    });
+    if (scratchcards.length == 0) {
+      return res.status(404).json({
+        error: `${trader.traderName} currently has no Mega Scratchcard assigned to them.`,
       });
     }
     return res.status(200).json({

@@ -9,6 +9,8 @@ router.post("/auth/register", upload.single("img"), authController.createUser);
 
 router.post("/auth/login", authController.login);
 
+router.get("/validate_trader/:id", authController.validateTrader);
+
 router.post("/email", auth, authController.email);
 
 module.exports = router;
